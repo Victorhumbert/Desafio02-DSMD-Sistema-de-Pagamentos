@@ -1,43 +1,58 @@
 # Aplicação de Pagamento (microservices)
 
-Serviços:
-- payment-service: expõe POST /payments, salva transação com status = pending e publica `payment.requested`.
-- payment-worker: consome `payment.requested`, processa a transação (simulado), atualiza status para `success` no Postgres e publica `payment.confirmed`.
-- notification-service: consome `payment.requested` e `payment.confirmed` e simula envio de notificações.
+Descrição breve
+- Sistema composto por 3 serviços independentes:
+  - payment-service: API REST para criar e consultar pagamentos (salva em Postgres e publica evento `payment.requested`).
+  - payment-worker: consumidor que processa pagamentos (confirma, atualiza DB e publica `payment.confirmed`).
+  - notification-service: consumidor que recebe eventos `payment.requested` e `payment.confirmed` e registra notificações.
+- Comunicação assíncrona via RabbitMQ (exchange `payments_exchange`, filas `payment_requested`, `payment_confirmed`).
 
-Critérios avaliativos atendidos
-1. Serviços independentes:
-   - payment-service, payment-worker e notification-service executam em containers separados.
-   - payment-service não faz confirmação síncrona — delega ao worker.
-2. Comunicação assíncrona:
-   - RabbitMQ (exchange `payments_exchange`) transporta mensagens `payment.requested` e `payment.confirmed`.
-   - Mensagens duráveis e ack/manual (retries via nack/requeue).
-3. Fluxo de processamento:
-   - POST /payments -> salva (pending) + publica `payment.requested`.
-   - payment-worker consome `payment.requested`, processa, atualiza DB para `success` e publica `payment.confirmed`.
-   - notification-service consome ambos os eventos e registra notificações.
+Requisitos
+- Docker Desktop (Windows) ou Docker Engine + Docker Compose
+- Porta 3000 (payment-service), 3001 (notification-service), RabbitMQ UI 15672, Postgres 5432
 
-Executar
-1. Docker e Docker Compose instalados.
-2. Na pasta do projeto (c:\Users\Humbe\Desktop\Aplicacao-de-pagamento):
-   docker-compose up --build
-3. Criar pagamento (exemplo):
-   curl -X POST http://localhost:3000/payments -H "Content-Type: application/json" -d "{\"amount\":100,\"userEmail\":\"cliente@exemplo.com\"}"
-4. Ver notificações:
-   http://localhost:3001/notifications
+Como executar
+1. Certifique-se de que o Docker Desktop está em execução.
+2. Na pasta do projeto:
+```bash
+cd C:\Users\Humbe\Desktop\Aplicacao-de-pagamento
+docker compose build --no-cache
+docker compose up -d
+```
 
-Endpoints úteis
-- payment-service:
+Endpoints principais
+- payment-service
   - POST /payments
+    - Body JSON: { "amount": 100, "userEmail": "cliente@exemplo.com" }
+    - Retorna: { "id": "...", "status": "pending" }
   - GET /payments/:id
-  - GET /health
-- notification-service:
+- notification-service
   - GET /notifications
-  - GET /health (padrão já pode ser adicionado se necessário)
 
-Observações e próximos passos recomendados
-- Em produção:
-  - Implementar DLQ (dead-letter) para mensagens que falham repetidamente.
-  - Adicionar autenticação e variáveis de ambiente seguras.
-  - Substituir simulação por integração com gateway de pagamentos.
-  - Implementar métricas e healthchecks mais robustos.
+Teste rápido (exemplo)
+```bash
+# criar pagamento
+curl -s -X POST http://localhost:3000/payments -H "Content-Type: application/json" -d '{"amount":100,"userEmail":"cliente@exemplo.com"}'
+
+# consultar pagamento (substituir <ID>)
+curl http://localhost:3000/payments/<ID>
+
+# listar notificações
+curl http://localhost:3001/notifications
+```
+
+Verificação e utilitários
+- RabbitMQ UI: http://localhost:15672 (usuário: guest / senha: guest)
+- Ver tabela payments no Postgres (dentro do container):
+```bash
+docker compose exec postgres psql -U pguser -d paymentsdb -c "SELECT id,user_email,amount,status,created_at,updated_at FROM payments ORDER BY created_at DESC LIMIT 10;"
+```
+
+Parar e remover
+```bash
+docker compose down
+```
+
+Observações
+- Fluxo assíncrono implementado: POST -> payment.requested -> worker processa -> DB atualizado para success -> payment.confirmed -> notification recebe ambos os eventos.
+- Para builds reprodutíveis, inclua package-lock.json nos diretórios dos serviços ou ajuste Dockerfiles conforme necessário.
