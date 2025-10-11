@@ -48,7 +48,7 @@ Ports e credenciais (padrão do compose)
 
 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/Victorhumbert/Desafio02-DSMD-Sistema-de-Pagamentos.git
 cd Desafio02-DSMD || cd Aplicacao-de-pagamento
 ```
 
