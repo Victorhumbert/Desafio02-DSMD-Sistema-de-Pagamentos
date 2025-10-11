@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_DB: paymentsdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://pguser:pgpass@postgres:5432/paymentsdb
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: 3000
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "3000:3000"
+
+  payment-worker:
+    build:
+      context: ./payment-service
+      dockerfile: worker.Dockerfile
+    environment:
+      DATABASE_URL: postgres://pguser:pgpass@postgres:5432/paymentsdb
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      PORT: 3001
+    depends_on:
+      - rabbitmq
+    ports:
+      - "3001:3001"
+
+volumes:
+  pgdata:
