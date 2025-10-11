@@ -15,7 +15,6 @@ Como executar
 1. Certifique-se de que o Docker Desktop está em execução.
 2. Na pasta do projeto:
 ```bash
-cd C:\Users\Humbe\Desktop\Aplicacao-de-pagamento
 docker compose build --no-cache
 docker compose up -d
 ```
