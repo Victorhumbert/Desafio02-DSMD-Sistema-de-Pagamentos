@@ -171,11 +171,5 @@ O esquema e criação da tabela `payments` são realizados em [payment-service/d
   - Confirme que a string `DATABASE_URL` em [docker-compose.yml](docker-compose.yml) está correta.
   - Rode a query de verificação (veja seção comandos úteis).
 
-👥 Contribuição
-1. Faça um fork do projeto
-2. Crie uma branch: `git checkout -b feature/nome-da-feature`
-3. Commit: `git commit -m "Descrição"`
-4. Push e abra um Pull Request
-
 📝 Observação final
-- Não há Prisma neste projeto; a inicialização do schema é feita em [payment-service/db.js](payment-service/db.js) pela função [`initDb`](payment-service/db.js). Lembre-se de garantir que o Postgres esteja pronto antes de iniciar os serviços para que a criação da tabela ocorra corretamente.
+- A inicialização do schema é feita em [payment-service/db.js](payment-service/db.js) pela função [`initDb`](payment-service/db.js). Lembre-se de garantir que o Postgres esteja pronto antes de iniciar os serviços para que a criação da tabela ocorra corretamente.
