@@ -1,0 +1,40 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+/payment-service/*.log
+/notification-service/*.log
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Build / coverage
+dist/
+build/
+coverage/
+coverage/
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.idea/
+*.iml
